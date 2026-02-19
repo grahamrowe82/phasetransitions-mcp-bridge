@@ -64,7 +64,15 @@ check_node() {
 # ── Collect input ────────────────────────────────────────────
 
 collect_input() {
-    read -rp "Enter your server URL: " SERVER_URL
+    # Accept URL and password as arguments (for curl | bash -s -- <url> <pass>)
+    # or prompt interactively (for double-click)
+    SERVER_URL="${1:-}"
+    SERVER_PASSWORD="${2:-}"
+    CONNECTION_NAME="${3:-}"
+
+    if [ -z "$SERVER_URL" ]; then
+        read -rp "Enter your server URL: " SERVER_URL
+    fi
 
     if [ -z "$SERVER_URL" ]; then
         fail "No URL entered. Please re-run and paste the URL from your setup email."
@@ -75,19 +83,19 @@ collect_input() {
         echo ""
     fi
 
-    read -rsp "Enter your password: " SERVER_PASSWORD
-    echo ""
+    if [ -z "$SERVER_PASSWORD" ]; then
+        read -rsp "Enter your password: " SERVER_PASSWORD
+        echo ""
+    fi
 
     if [ -z "$SERVER_PASSWORD" ]; then
         fail "No password entered. Please re-run and enter the password you were given."
     fi
 
     # Derive default name from hostname (e.g. legalsearch-web.onrender.com → legalsearch)
-    local hostname
-    hostname=$(echo "$SERVER_URL" | sed -E 's|https?://||' | cut -d/ -f1 | cut -d. -f1 | sed 's/-web$//' | sed 's/-app$//' | sed 's/-api$//')
-
-    read -rp "Connection name [$hostname]: " CONNECTION_NAME
-    CONNECTION_NAME="${CONNECTION_NAME:-$hostname}"
+    if [ -z "$CONNECTION_NAME" ]; then
+        CONNECTION_NAME=$(echo "$SERVER_URL" | sed -E 's|https?://||' | cut -d/ -f1 | cut -d. -f1 | sed 's/-web$//' | sed 's/-app$//' | sed 's/-api$//')
+    fi
     echo ""
 }
 
@@ -143,14 +151,7 @@ try {
 " "$CONFIG_FILE" "$CONNECTION_NAME" 2>/dev/null || echo "no")
 
         if [ "$exists" = "yes" ]; then
-            read -rp "  A connection called '$CONNECTION_NAME' already exists. Overwrite? (y/n) [n]: " overwrite
-            overwrite="${overwrite:-n}"
-            if [[ ! "$overwrite" =~ ^[Yy] ]]; then
-                echo ""
-                echo "  No changes made. Re-run and choose a different name if needed."
-                echo ""
-                exit 0
-            fi
+            warn "Connection '$CONNECTION_NAME' already exists — updating it."
         fi
     fi
 
@@ -201,7 +202,7 @@ if (check.mcpServers && check.mcpServers[name]) {
 
 print_banner
 check_node
-collect_input
+collect_input "$@"
 
 echo "Setting up..."
 test_connection
