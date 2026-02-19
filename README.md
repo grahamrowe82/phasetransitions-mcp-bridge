@@ -1,4 +1,4 @@
-# @phasetransitions/mcp-bridge
+# phasetransitions-mcp-bridge
 
 Universal MCP stdio-to-HTTP bridge for Claude Desktop.
 
@@ -13,7 +13,7 @@ In your Claude Desktop config (`Settings > Developer > Edit Config`):
   "mcpServers": {
     "my-server": {
       "command": "npx",
-      "args": ["-y", "@phasetransitions/mcp-bridge", "https://my-server.com/mcp", "my-password"]
+      "args": ["-y", "phasetransitions-mcp-bridge", "https://my-server.com/mcp", "my-password"]
     }
   }
 }
@@ -34,7 +34,7 @@ Every JSON-RPC message from Claude is POSTed to the remote URL. The response is 
 ## Arguments
 
 ```
-npx @phasetransitions/mcp-bridge <url> [password]
+npx phasetransitions-mcp-bridge <url> [password]
 ```
 
 - `url` — The remote MCP endpoint (required)
@@ -49,11 +49,11 @@ Use multiple entries in your config to connect to several servers at once:
   "mcpServers": {
     "legal": {
       "command": "npx",
-      "args": ["-y", "@phasetransitions/mcp-bridge", "https://legal-search.com/mcp", "pass1"]
+      "args": ["-y", "phasetransitions-mcp-bridge", "https://legal-search.com/mcp", "pass1"]
     },
     "analytics": {
       "command": "npx",
-      "args": ["-y", "@phasetransitions/mcp-bridge", "https://analytics.com/mcp", "pass2"]
+      "args": ["-y", "phasetransitions-mcp-bridge", "https://analytics.com/mcp", "pass2"]
     }
   }
 }

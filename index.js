@@ -4,7 +4,7 @@
  * MCP Bridge — universal stdio-to-HTTP proxy for Claude Desktop.
  *
  * Usage:
- *   npx @phasetransitions/mcp-bridge <url> <password>
+ *   npx phasetransitions-mcp-bridge <url> <password>
  *
  * Claude Desktop launches this as a stdio process. Every JSON-RPC message
  * from stdin is POSTed to the remote /mcp endpoint. The response is written
