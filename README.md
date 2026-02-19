@@ -4,22 +4,16 @@ Universal MCP stdio-to-HTTP bridge for Claude Desktop.
 
 Connects Claude Desktop to any remote MCP server that speaks [Streamable HTTP](https://modelcontextprotocol.io/docs/concepts/transports#streamable-http). Zero dependencies, works with Node 18+.
 
-## Usage
+## Quick setup (non-technical users)
 
-In your Claude Desktop config (`Settings > Developer > Edit Config`):
+Download **[install.command](https://raw.githubusercontent.com/grahamrowe82/phasetransitions-mcp-bridge/main/install.command)**, double-click it, and follow the prompts. You'll need:
 
-```json
-{
-  "mcpServers": {
-    "my-server": {
-      "command": "npx",
-      "args": ["-y", "phasetransitions-mcp-bridge", "https://my-server.com/mcp", "my-password"]
-    }
-  }
-}
-```
+- Your **server URL** (provided by your admin)
+- Your **password** (provided separately)
+- [Node.js](https://nodejs.org) installed
+- [Claude Desktop](https://claude.ai/download) installed
 
-That's it. Save, restart Claude Desktop.
+The installer downloads the bridge script, updates your Claude Desktop config, and you're done.
 
 ## How it works
 
@@ -31,37 +25,50 @@ Claude Desktop <--stdio--> mcp-bridge <--HTTP--> Your server's /mcp endpoint
 
 Every JSON-RPC message from Claude is POSTed to the remote URL. The response is written back. Authentication is via Basic Auth, derived from the password argument.
 
-## Arguments
+## Manual setup
 
-```
-npx phasetransitions-mcp-bridge <url> [password]
-```
+If you prefer to configure things yourself:
 
-- `url` — The remote MCP endpoint (required)
-- `password` — Sent as Basic Auth header (optional)
-
-## Multiple servers
-
-Use multiple entries in your config to connect to several servers at once:
+1. Download `index.js` to a local folder (e.g. `~/mcp-bridge/`)
+2. Edit your Claude Desktop config (`Settings > Developer > Edit Config`):
 
 ```json
 {
   "mcpServers": {
-    "legal": {
-      "command": "npx",
-      "args": ["-y", "phasetransitions-mcp-bridge", "https://legal-search.com/mcp", "pass1"]
-    },
-    "analytics": {
-      "command": "npx",
-      "args": ["-y", "phasetransitions-mcp-bridge", "https://analytics.com/mcp", "pass2"]
+    "my-server": {
+      "command": "node",
+      "args": ["/Users/you/mcp-bridge/index.js", "https://my-server.com/mcp", "my-password"]
     }
   }
 }
 ```
 
+3. Save, quit Claude Desktop (Cmd+Q), reopen.
+
+## Multiple servers
+
+Add multiple entries — one per server:
+
+```json
+{
+  "mcpServers": {
+    "legal": {
+      "command": "node",
+      "args": ["/Users/you/mcp-bridge/index.js", "https://legal-search.com/mcp", "pass1"]
+    },
+    "analytics": {
+      "command": "node",
+      "args": ["/Users/you/mcp-bridge/index.js", "https://analytics.com/mcp", "pass2"]
+    }
+  }
+}
+```
+
+Run the installer once per server, or add entries manually.
+
 ## Requirements
 
-- Node.js 18+ (install from [nodejs.org](https://nodejs.org))
+- Node.js 18+ ([nodejs.org](https://nodejs.org))
 - A remote MCP server with an HTTP endpoint
 
 ## License
