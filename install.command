@@ -155,6 +155,13 @@ try {
         fi
     fi
 
+    echo "[debug] CONFIG_FILE=$CONFIG_FILE"
+    echo "[debug] CONNECTION_NAME=$CONNECTION_NAME"
+    echo "[debug] bridge_path=$bridge_path"
+    echo "[debug] Config before Node script:"
+    cat "$CONFIG_FILE" 2>/dev/null || echo "[debug] (file does not exist)"
+    echo ""
+
     node -e "
 const fs = require('fs');
 const configPath = process.argv[1];
@@ -163,11 +170,21 @@ const bridgePath = process.argv[3];
 const url = process.argv[4];
 const password = process.argv[5];
 
+console.error('[debug:node] configPath=' + configPath);
+console.error('[debug:node] name=' + name);
+console.error('[debug:node] bridgePath=' + bridgePath);
+console.error('[debug:node] url=' + url);
+console.error('[debug:node] password=' + (password ? '(set, ' + password.length + ' chars)' : '(empty)'));
+
 let config = {};
 try {
     const raw = fs.readFileSync(configPath, 'utf8');
     config = JSON.parse(raw);
-} catch (e) {}
+    console.error('[debug:node] Existing config keys: ' + JSON.stringify(Object.keys(config)));
+    console.error('[debug:node] Existing mcpServers: ' + JSON.stringify(Object.keys(config.mcpServers || {})));
+} catch (e) {
+    console.error('[debug:node] Could not read existing config: ' + e.message);
+}
 
 if (!config.mcpServers) config.mcpServers = {};
 
@@ -176,17 +193,34 @@ config.mcpServers[name] = {
     args: [bridgePath, url, password]
 };
 
-fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+console.error('[debug:node] mcpServers after add: ' + JSON.stringify(Object.keys(config.mcpServers)));
+
+const output = JSON.stringify(config, null, 2) + '\n';
+fs.writeFileSync(configPath, output);
+console.error('[debug:node] Wrote ' + output.length + ' bytes to ' + configPath);
 
 const check = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+console.error('[debug:node] Verify mcpServers: ' + JSON.stringify(Object.keys(check.mcpServers || {})));
 if (check.mcpServers && check.mcpServers[name]) {
+    console.error('[debug:node] PASS — entry found after write');
     process.exit(0);
 } else {
+    console.error('[debug:node] FAIL — entry missing after write');
     process.exit(1);
 }
 " "$CONFIG_FILE" "$CONNECTION_NAME" "$bridge_path" "$SERVER_URL" "$SERVER_PASSWORD"
 
-    if [ $? -eq 0 ]; then
+    local node_exit=$?
+    echo ""
+    echo "[debug] Node exit code: $node_exit"
+    echo "[debug] Config after Node script:"
+    cat "$CONFIG_FILE"
+    echo ""
+    echo "[debug] File details:"
+    ls -la "$CONFIG_FILE"
+    echo ""
+
+    if [ $node_exit -eq 0 ]; then
         ok "Connection '$CONNECTION_NAME' added"
         ok "Config file saved and verified"
     else
