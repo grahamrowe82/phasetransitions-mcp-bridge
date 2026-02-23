@@ -11,8 +11,7 @@
  * back to stdout. Zero dependencies — uses only Node built-in modules.
  */
 
-import { createInterface } from "node:readline";
-import { Buffer } from "node:buffer";
+const { createInterface } = require("node:readline");
 
 const url = process.argv[2];
 const password = process.argv[3];
