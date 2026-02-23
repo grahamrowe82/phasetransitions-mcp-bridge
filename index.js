@@ -59,7 +59,34 @@ async function handleMessage(raw) {
 
     if (res.status !== 204) {
       const body = await res.text();
-      if (body) process.stdout.write(body + "\n");
+      if (body) {
+        // Validate before relaying — MCP SDK rejects id:null via Zod
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed.id === null || parsed.id === undefined) {
+            if (msg.id != null) {
+              // Server dropped the id — restore it from the original request
+              parsed.id = msg.id;
+              process.stdout.write(JSON.stringify(parsed) + "\n");
+            }
+            // else: notification response with no id — drop silently
+          } else {
+            process.stdout.write(body + "\n");
+          }
+        } catch {
+          // Non-JSON response — only report for requests, not notifications
+          if (msg.id != null) {
+            process.stderr.write("[bridge] Non-JSON response: " + body.substring(0, 200) + "\n");
+            process.stdout.write(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: msg.id,
+                error: { code: -32603, message: "Server returned non-JSON response" },
+              }) + "\n"
+            );
+          }
+        }
+      }
     }
   } catch (err) {
     process.stderr.write("[bridge] Request failed: " + err.message + "\n");
